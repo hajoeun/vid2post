@@ -47,23 +47,28 @@ export default function Posts() {
 
                   {videoId && (
                     <div className="flex-shrink-0">
-                      <a
-                        href={`https://www.youtube.com/watch?v=${videoId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                        >
-                          <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
-                        </svg>
-                        유튜브 보기
-                      </a>
+                      <Link href={`/posts/${id}`} className="block">
+                        <div className="relative w-40 h-24 sm:w-48 sm:h-28 rounded-md overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                          <img
+                            src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
+                            alt={title}
+                            className="object-cover w-full h-full"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="bg-black bg-opacity-60 rounded-full p-2">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="white"
+                              >
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
                     </div>
                   )}
                 </div>
