@@ -47,7 +47,11 @@ interface Caption {
 
 // 자막 그룹화 함수
 function groupCaptionsByTimestamps(captions: Caption[], timestamps: { title: string; timestamp: string; seconds: number }[]): { title: string; captions: string[] }[] {
-  if (!timestamps.length) return [{ title: "전체 내용", captions: captions.map(c => c.text) }];
+  if (!timestamps.length) {
+    console.log("[자막 그룹화] 타임스탬프가 없습니다. 자동으로 섹션을 나눕니다.");
+    // 비동기 함수를 동기적으로 처리하기 위해 빈 배열 반환 후 나중에 채움
+    return [{ title: "콘텐츠 로딩 중...", captions: captions.map(c => c.text) }];
+  }
   
   const groups: { title: string; captions: string[] }[] = [];
   
@@ -71,6 +75,108 @@ function groupCaptionsByTimestamps(captions: Caption[], timestamps: { title: str
   }
   
   return groups;
+}
+
+// 자막을 자동으로 섹션으로 나누는 함수
+async function autoSegmentCaptions(captions: Caption[]): Promise<{ title: string; captions: string[] }[]> {
+  console.log("[자동 섹션 분할] 자막을 자동으로 섹션으로 나누는 중...");
+  
+  // 자막이 너무 적으면 하나의 섹션으로 처리
+  if (captions.length < 20) {
+    console.log("[자동 섹션 분할] 자막이 너무 적어 하나의 섹션으로 처리합니다.");
+    return [{ title: "전체 내용", captions: captions.map(c => c.text) }];
+  }
+  
+  // 자막을 일정 크기의 청크로 나누기 (약 3-5분 단위)
+  const CHUNK_SIZE = 30; // 약 30개의 자막을 하나의 청크로 (일반적으로 2-3분 분량)
+  const chunks: Caption[][] = [];
+  
+  for (let i = 0; i < captions.length; i += CHUNK_SIZE) {
+    chunks.push(captions.slice(i, i + CHUNK_SIZE));
+  }
+  
+  console.log(`[자동 섹션 분할] ${chunks.length}개의 청크로 나누었습니다.`);
+  
+  // 각 청크에 대해 제목 생성
+  const groups: { title: string; captions: string[] }[] = [];
+  
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    const chunkText = chunk.map(c => c.text).join(' ');
+    
+    // 청크에 대한 제목 생성
+    const title = await generateSectionTitle(chunkText, i + 1);
+    
+    groups.push({
+      title,
+      captions: chunk.map(c => c.text)
+    });
+    
+    console.log(`[자동 섹션 분할] 청크 ${i+1}/${chunks.length}에 대한 제목 생성: ${title}`);
+  }
+  
+  return groups;
+}
+
+// 섹션 제목 생성 함수
+async function generateSectionTitle(text: string, sectionNumber: number): Promise<string> {
+  try {
+    console.log(`[섹션 제목 생성] 섹션 ${sectionNumber} 제목 생성 중...`);
+    
+    // Ollama API가 사용 불가능한 환경(예: Vercel)에서는 기본 제목 반환
+    if (process.env.OLLAMA_API_AVAILABLE === 'false') {
+      console.log(`[섹션 제목 생성] Ollama API 사용 불가능 - 기본 제목 반환`);
+      return `섹션 ${sectionNumber}`;
+    }
+    
+    const response = await fetch(process.env.OLLAMA_API_URL + "/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "exaone3.5",
+        prompt: `다음은 유튜브 영상 자막의 일부입니다. 이 내용을 가장 잘 표현하는 짧은 제목(5-7단어 이내)을 생성해주세요.
+        
+        중요한 규칙:
+        1. 제목은 5-7단어 이내로 짧고 간결하게 작성하세요.
+        2. 내용의 핵심 주제나 개념을 포함해야 합니다.
+        3. "소개", "결론" 같은 일반적인 단어는 피하고 구체적인 내용을 담으세요.
+        4. 번호를 포함하지 마세요 (예: "파트 1" 같은 표현 금지).
+        5. 제목만 작성하고 다른 설명은 포함하지 마세요.
+        6. 따옴표나 기타 특수문자를 포함하지 마세요.
+        7. 제목 끝에 마침표를 넣지 마세요.
+        
+        자막 내용:
+        ${text.length > 1000 ? text.substring(0, 1000) + "..." : text}
+        
+        제목 (5-7단어 이내):`,
+        temperature: 0.3,
+        stream: false,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Ollama API 요청 실패");
+    }
+
+    const data = await response.json();
+    
+    // 결과 후처리: 따옴표 제거, 마침표 제거
+    let title = data.response.trim();
+    
+    // 따옴표 제거
+    title = title.replace(/["']/g, '');
+    
+    // 마침표 제거
+    title = title.replace(/\.$/, '');
+    
+    console.log(`[섹션 제목 생성 완료] 결과: ${title}`);
+    return title;
+  } catch (error) {
+    console.error("섹션 제목 생성 중 오류 발생:", error);
+    return `섹션 ${sectionNumber}`;
+  }
 }
 
 // 유튜브 자막 가져오기 (youtube-captions-scraper 패키지 사용)
@@ -187,13 +293,16 @@ async function summarizeText(text: string, title: string): Promise<string> {
         8. 오직 자막 내용만 요약하고, 요약 자체에 대한 설명은 하지 마세요.
         9. 게시글과 무관한 내용(예: "이 요약은 유튜브 자막에서 제시된 핵심 아이디어를 반영합니다")을 추가하지 마세요.
         10. 직접적으로 내용만 작성하고, 메타 정보나 설명은 완전히 제외하세요.
+        11. 제목이나 소제목을 포함하지 마세요. 제목은 이미 별도로 추가됩니다.
+        12. 절대로 "### 제목" 형식의 마크다운 제목을 포함하지 마세요.
+        13. 요약 내용만 작성하고, 제목이나 소제목은 완전히 제외하세요.
         
         제목: ${title}
         
         자막:
         ${text}
         
-        요약(메타 설명 없이 직접 내용만 작성):`,
+        요약(제목 없이 내용만 작성):`,
         temperature: 0.5,
         stream: false,
       }),
@@ -210,7 +319,22 @@ async function summarizeText(text: string, title: string): Promise<string> {
     console.log(`[요약 결과 샘플] ${responseSample}`);
     console.log(`[요약 완료] 제목: ${title}, 결과 길이: ${data.response.length}자`);
     
-    return data.response;
+    // 요약 텍스트에서 제목이 포함되어 있는지 확인하고 제거
+    let cleanedText = data.response;
+    
+    // 요약 텍스트가 제목으로 시작하는 경우 제거 (### 형식)
+    const titlePattern1 = new RegExp(`^###\\s*${title}\\s*\n`, 'i');
+    cleanedText = cleanedText.replace(titlePattern1, '');
+    
+    // 요약 텍스트가 제목으로 시작하는 경우 제거 (## 형식)
+    const titlePattern2 = new RegExp(`^##\\s*${title}\\s*\n`, 'i');
+    cleanedText = cleanedText.replace(titlePattern2, '');
+    
+    // 요약 텍스트가 제목으로 시작하는 경우 제거 (일반 텍스트 형식)
+    const titlePattern3 = new RegExp(`^${title}\\s*\n`, 'i');
+    cleanedText = cleanedText.replace(titlePattern3, '');
+    
+    return cleanedText;
   } catch (error) {
     console.error("텍스트 요약 중 오류 발생:", error);
     return text; // 오류 발생 시 원본 텍스트 반환
@@ -302,12 +426,16 @@ async function generateMarkdown(videoTitle: string, groups: { title: string; cap
     const group = groups[i];
     console.log(`[마크다운 생성] 그룹 ${i+1}/${groups.length} 처리 중: ${group.title}`);
     
+    // 섹션 제목 추가 (## 형식)
     markdown += `## ${group.title}\n\n`;
+    
+    // 동일한 제목으로 하위 섹션 추가 (### 형식)
+    markdown += `### ${group.title}\n\n`;
     
     const captionText = group.captions.join(' ');
     console.log(`[마크다운 생성] 그룹 ${i+1} 자막 길이: ${captionText.length}자`);
     
-    // Ollama를 사용하여 자막 요약
+    // Ollama를 사용하여 자막 요약 (제목 제외)
     const summarizedText = await summarizeText(captionText, group.title);
     
     markdown += summarizedText + '\n\n';
@@ -372,9 +500,16 @@ export async function POST(request: NextRequest) {
       console.log("[타임스탬프 샘플]", timestamps.slice(0, 3));
     }
     
-    // 자막 그룹화
-    const captionGroups = groupCaptionsByTimestamps(captions, timestamps);
-    console.log(`[자막 그룹화] ${captionGroups.length}개의 그룹으로 나누었습니다.`);
+    // 자막 그룹화 (타임스탬프가 있는 경우)
+    let captionGroups = groupCaptionsByTimestamps(captions, timestamps);
+    console.log(`[자막 그룹화] 초기 그룹화: ${captionGroups.length}개의 그룹으로 나누었습니다.`);
+    
+    // 타임스탬프가 없는 경우 자동으로 섹션 나누기
+    if (timestamps.length === 0) {
+      console.log("[자막 그룹화] 타임스탬프가 없어 자동으로 섹션을 나눕니다.");
+      captionGroups = await autoSegmentCaptions(captions);
+      console.log(`[자막 그룹화] 자동 섹션 분할 완료: ${captionGroups.length}개의 그룹으로 나누었습니다.`);
+    }
     
     // 마크다운 생성 (Ollama를 사용한 요약 포함)
     console.log("[마크다운 생성 시작]");
