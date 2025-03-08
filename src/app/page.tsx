@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import ReactMarkdown from 'react-markdown'
 import { Header } from '@/components/header'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -16,6 +15,7 @@ import {
 } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle, CheckCircle2, FileText } from 'lucide-react'
+import { Markdown } from '@/components/markdown'
 
 interface ApiResponse {
   markdown: string
@@ -226,7 +226,7 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <div className="prose dark:prose-invert max-w-none">
-                <ReactMarkdown>{markdownResult}</ReactMarkdown>
+                <Markdown content={markdownResult} />
               </div>
             </CardContent>
             <CardFooter>
