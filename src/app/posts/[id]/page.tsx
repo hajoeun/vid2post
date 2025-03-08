@@ -8,15 +8,17 @@ export async function generateStaticParams() {
   return paths
 }
 
-// Next.js 15에서는 params가 직접 전달됩니다
-type PostPageProps = {
-  params: {
-    id: string
-  }
+// Next.js 15에서 요구하는 타입 정의
+type Params = Promise<{ id: string }>
+
+interface PageProps {
+  params: Params
 }
 
-export default async function Post({ params }: PostPageProps) {
-  const postData = await getPostData(params.id)
+export default async function Post({ params }: PageProps) {
+  // params가 Promise이므로 await로 값을 추출
+  const { id } = await params
+  const postData = await getPostData(id)
 
   // 날짜를 YYYY년 MM월 DD일 형식으로 변환하는 함수
   const formatDate = (dateString: string) => {
