@@ -217,6 +217,81 @@ async function summarizeText(text: string, title: string): Promise<string> {
   }
 }
 
+// 한 줄 요약 생성 함수
+async function generateOneLineSummary(text: string, title: string): Promise<string> {
+  try {
+    console.log(`[한 줄 요약 시작] 제목: ${title}, 텍스트 길이: ${text.length}자`);
+    
+    // Ollama API가 사용 불가능한 환경(예: Vercel)에서는 모의 데이터 반환
+    if (process.env.OLLAMA_API_AVAILABLE === 'false') {
+      console.log(`[한 줄 요약] Ollama API 사용 불가능 - 모의 데이터 반환`);
+      return `${title}에 관한 유튜브 영상 요약`;
+    }
+    
+    const response = await fetch(process.env.OLLAMA_API_URL + "/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "exaone3.5",
+        prompt: `다음은 유튜브 영상의 내용입니다. 이 내용을 정확히 한 문장으로 요약해주세요.
+        
+        중요한 규칙:
+        1. 반드시 한 문장으로만 작성하세요 (최대 60자 이내).
+        2. 핵심 내용만 간결하게 담아주세요.
+        3. "이 영상은..." 또는 "이 콘텐츠는..." 같은 표현은 사용하지 마세요.
+        4. 직접적으로 내용만 요약하세요.
+        5. 문장 끝에 마침표를 포함하세요.
+        6. 절대로 줄바꿈을 포함하지 마세요.
+        7. 절대로 번호 매기기나 목록을 포함하지 마세요.
+        8. 절대로 여러 문장으로 나누지 마세요.
+        9. 한 줄의 짧은 문장으로만 작성하세요.
+        
+        제목: ${title}
+        
+        내용:
+        ${text}
+        
+        한 줄 요약 (60자 이내, 줄바꿈 없이):`,
+        temperature: 0.3,
+        stream: false,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Ollama API 요청 실패");
+    }
+
+    const data = await response.json();
+    
+    // 결과 후처리: 줄바꿈 제거, 길이 제한, 마침표 확인
+    let summary = data.response.trim();
+    
+    // 줄바꿈 제거
+    summary = summary.replace(/\n/g, ' ');
+    
+    // 여러 공백을 하나로 치환
+    summary = summary.replace(/\s+/g, ' ');
+    
+    // 길이 제한 (60자)
+    if (summary.length > 60) {
+      summary = summary.substring(0, 57) + '...';
+    }
+    
+    // 마침표 확인
+    if (!summary.endsWith('.')) {
+      summary = summary + '.';
+    }
+    
+    console.log(`[한 줄 요약 완료] 결과: ${summary}`);
+    return summary;
+  } catch (error) {
+    console.error("한 줄 요약 생성 중 오류 발생:", error);
+    return `${title}에 관한 유튜브 영상.`;
+  }
+}
+
 // 마크다운 생성 함수
 async function generateMarkdown(videoTitle: string, groups: { title: string; captions: string[] }[]): Promise<string> {
   console.log(`[마크다운 생성 시작] 제목: ${videoTitle}, 그룹 수: ${groups.length}`);
@@ -306,8 +381,17 @@ export async function POST(request: NextRequest) {
     const markdown = await generateMarkdown(videoTitle, captionGroups);
     console.log("[마크다운 생성 완료]");
     
+    // 전체 자막을 하나의 텍스트로 합치기
+    const allCaptionsText = captions.map(caption => caption.text).join(' ');
+    
+    // 한 줄 요약 생성
+    console.log("[한 줄 요약 생성 시작]");
+    const description = await generateOneLineSummary(allCaptionsText, videoTitle);
+    console.log("[한 줄 요약 생성 완료]");
+    
     return NextResponse.json({ 
       markdown,
+      description,
       meta: {
         usedMockData,
         captionsCount: captions.length,

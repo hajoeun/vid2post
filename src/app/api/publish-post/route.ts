@@ -2,9 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
+// 문자열을 YAML 메타데이터에 안전하게 저장하기 위한 함수
+function escapeYamlString(str: string): string {
+  // 줄바꿈 제거
+  let result = str.replace(/\n/g, ' ');
+  
+  // 여러 공백을 하나로 치환
+  result = result.replace(/\s+/g, ' ');
+  
+  // 따옴표 이스케이프
+  result = result.replace(/"/g, '\\"');
+  
+  return result;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { markdown, videoId } = await request.json();
+    const { markdown, videoId, description } = await request.json();
     
     if (!markdown) {
       return NextResponse.json({ error: "마크다운 내용이 없습니다." }, { status: 400 });
@@ -24,10 +38,16 @@ export async function POST(request: NextRequest) {
     // 파일명 생성 (videoId 사용)
     const filename = `${videoId}.md`;
     
+    // description 처리
+    let safeDescription = description || "유튜브 영상에서 생성된 게시글";
+    
+    // 안전한 YAML 문자열로 변환
+    safeDescription = escapeYamlString(safeDescription);
+    
     // 메타데이터 추가
     const postContent = `---
-title: "${title}"
-description: "유튜브 영상에서 생성된 게시글"
+title: "${escapeYamlString(title)}"
+description: "${safeDescription}"
 date: "${now.toISOString()}"
 videoId: "${videoId}"
 ---
