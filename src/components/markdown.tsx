@@ -19,7 +19,7 @@ interface MarkdownProps {
 
 export function Markdown({ content, className }: MarkdownProps) {
   return (
-    <div className={cn('space-y-6', className)}>
+    <div className={cn('space-y-6 text-foreground', className)}>
       <ReactMarkdown
         components={{
           h1: ({ className, ...props }: ComponentPropsWithoutRef<'h1'>) => (
@@ -35,16 +35,34 @@ export function Markdown({ content, className }: MarkdownProps) {
             <H4 className={className} {...props} />
           ),
           p: ({ className, ...props }: ComponentPropsWithoutRef<'p'>) => (
-            <P className={className} {...props} />
+            <P
+              className={cn(
+                'leading-7 text-foreground [&:not(:first-child)]:mt-6',
+                className
+              )}
+              {...props}
+            />
           ),
           blockquote: ({
             className,
             ...props
           }: ComponentPropsWithoutRef<'blockquote'>) => (
-            <Blockquote className={className} {...props} />
+            <Blockquote
+              className={cn(
+                'mt-6 border-l-2 border-gray-300 dark:border-gray-600 pl-6 italic text-foreground',
+                className
+              )}
+              {...props}
+            />
           ),
           ul: ({ className, ...props }: ComponentPropsWithoutRef<'ul'>) => (
-            <List className={className} {...props} />
+            <List
+              className={cn(
+                'my-6 ml-6 list-disc [&>li]:mt-2 text-foreground',
+                className
+              )}
+              {...props}
+            />
           ),
           code: ({
             className,
@@ -55,7 +73,7 @@ export function Markdown({ content, className }: MarkdownProps) {
               <InlineCode className={className} {...props} />
             ) : (
               <pre
-                className="p-4 rounded-md bg-gray-100 dark:bg-gray-800 overflow-x-auto"
+                className="p-4 rounded-md bg-gray-100 dark:bg-gray-800 overflow-x-auto text-foreground"
                 {...props}
               />
             ),
@@ -98,15 +116,15 @@ export function Markdown({ content, className }: MarkdownProps) {
             ...props
           }: ComponentPropsWithoutRef<'strong'>) => (
             <strong
-              className={cn(
-                'font-bold text-gray-900 dark:text-white',
-                className
-              )}
+              className={cn('font-bold text-foreground', className)}
               {...props}
             />
           ),
           em: ({ className, ...props }: ComponentPropsWithoutRef<'em'>) => (
-            <em className={cn('italic', className)} {...props} />
+            <em
+              className={cn('italic text-foreground', className)}
+              {...props}
+            />
           ),
           table: ({
             className,
@@ -114,7 +132,10 @@ export function Markdown({ content, className }: MarkdownProps) {
           }: ComponentPropsWithoutRef<'table'>) => (
             <div className="overflow-x-auto my-6">
               <table
-                className={cn('w-full border-collapse text-sm', className)}
+                className={cn(
+                  'w-full border-collapse text-sm text-foreground',
+                  className
+                )}
                 {...props}
               />
             </div>
@@ -124,7 +145,10 @@ export function Markdown({ content, className }: MarkdownProps) {
             ...props
           }: ComponentPropsWithoutRef<'thead'>) => (
             <thead
-              className={cn('bg-gray-100 dark:bg-gray-800', className)}
+              className={cn(
+                'bg-gray-100 dark:bg-gray-800 text-foreground',
+                className
+              )}
               {...props}
             />
           ),
@@ -132,12 +156,12 @@ export function Markdown({ content, className }: MarkdownProps) {
             className,
             ...props
           }: ComponentPropsWithoutRef<'tbody'>) => (
-            <tbody className={className} {...props} />
+            <tbody className={cn('text-foreground', className)} {...props} />
           ),
           tr: ({ className, ...props }: ComponentPropsWithoutRef<'tr'>) => (
             <tr
               className={cn(
-                'border-b border-gray-200 dark:border-gray-700',
+                'border-b border-gray-200 dark:border-gray-700 text-foreground',
                 className
               )}
               {...props}
@@ -145,12 +169,15 @@ export function Markdown({ content, className }: MarkdownProps) {
           ),
           th: ({ className, ...props }: ComponentPropsWithoutRef<'th'>) => (
             <th
-              className={cn('text-left p-3 font-semibold', className)}
+              className={cn(
+                'text-left p-3 font-semibold text-foreground',
+                className
+              )}
               {...props}
             />
           ),
           td: ({ className, ...props }: ComponentPropsWithoutRef<'td'>) => (
-            <td className={cn('p-3', className)} {...props} />
+            <td className={cn('p-3 text-foreground', className)} {...props} />
           ),
         }}
       >

@@ -4,6 +4,18 @@ import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Header } from '@/components/header'
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { AlertCircle, CheckCircle2, FileText } from 'lucide-react'
 
 interface ApiResponse {
   markdown: string
@@ -112,89 +124,122 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header />
-      <main className="p-8 max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center">
-          유튜브 영상 게시글 생성기
-        </h1>
-
-        <div className="mb-4 text-center">
-          <Link href="/posts" className="text-blue-600 hover:underline">
-            게시글 목록 보기
-          </Link>
+      <main className="container py-10 max-w-4xl mx-auto px-4">
+        <div className="flex flex-col items-center justify-center mb-10 space-y-2">
+          <h1 className="text-4xl font-bold tracking-tight">Vid2Post</h1>
+          <p className="text-muted-foreground text-lg">
+            유튜브 영상을 블로그 게시글로 변환하세요
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mb-8">
-          <div className="flex flex-col gap-4">
-            <label htmlFor="youtubeUrl" className="font-medium">
-              유튜브 URL 입력
-            </label>
-            <input
-              id="youtubeUrl"
-              type="text"
-              value={youtubeUrl}
-              onChange={(e) => setYoutubeUrl(e.target.value)}
-              placeholder="https://www.youtube.com/watch?v=..."
-              className="p-3 border rounded-md bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
-              required
-            />
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="bg-red-600 text-white p-3 rounded-md hover:bg-red-700 disabled:opacity-50"
-            >
-              {isLoading ? '처리 중...' : '게시글 생성하기'}
-            </button>
-          </div>
-        </form>
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>새 게시글 생성</CardTitle>
+            <CardDescription>
+              유튜브 URL을 입력하면 자동으로 게시글을 생성합니다
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="youtubeUrl" className="text-sm font-medium">
+                  유튜브 URL 입력
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    id="youtubeUrl"
+                    type="text"
+                    value={youtubeUrl}
+                    onChange={(e) => setYoutubeUrl(e.target.value)}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    className="flex-1"
+                    required
+                  />
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading ? '처리 중...' : '생성하기'}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button variant="outline" asChild>
+              <Link href="/posts" className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                게시글 목록 보기
+              </Link>
+            </Button>
+          </CardFooter>
+        </Card>
 
         {error && (
-          <div className="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>오류</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         {markdownResult && (
-          <div className="mt-8">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">생성된 게시글</h2>
-              <button
-                onClick={handlePublish}
-                disabled={isLoading}
-                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50"
-              >
-                {isLoading ? '발행 중...' : '게시글 발행하기'}
-              </button>
-            </div>
-
-            {meta && (
-              <div className="bg-blue-50 dark:bg-blue-900 p-3 rounded-md border border-blue-200 dark:border-blue-800 mb-4 text-sm text-blue-800 dark:text-blue-200">
-                <h3 className="font-bold mb-1">처리 정보</h3>
-                <ul>
-                  <li>
-                    예시 데이터 사용: {meta.usedMockData ? '예' : '아니오'}
-                  </li>
-                  <li>자막 수: {meta.captionsCount}개</li>
-                  <li>타임스탬프 수: {meta.timestampsCount}개</li>
-                  <li>그룹 수: {meta.groupsCount}개</li>
-                </ul>
+          <Card className="mt-8">
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  생성된 게시글
+                </CardTitle>
+                <Button onClick={handlePublish} disabled={isLoading}>
+                  {isLoading ? '발행 중...' : '게시글 발행하기'}
+                </Button>
               </div>
-            )}
-
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md border border-gray-200 dark:border-gray-700">
+              {meta && (
+                <CardDescription>
+                  <div className="mt-2 p-3 bg-secondary rounded-md text-sm">
+                    <h3 className="font-medium mb-1">처리 정보</h3>
+                    <ul className="space-y-1">
+                      <li className="flex items-center gap-1">
+                        <span className="text-muted-foreground">
+                          예시 데이터:
+                        </span>
+                        <span>
+                          {meta.usedMockData ? '사용함' : '사용 안함'}
+                        </span>
+                      </li>
+                      <li className="flex items-center gap-1">
+                        <span className="text-muted-foreground">자막:</span>
+                        <span>{meta.captionsCount}개</span>
+                      </li>
+                      <li className="flex items-center gap-1">
+                        <span className="text-muted-foreground">
+                          타임스탬프:
+                        </span>
+                        <span>{meta.timestampsCount}개</span>
+                      </li>
+                      <li className="flex items-center gap-1">
+                        <span className="text-muted-foreground">그룹:</span>
+                        <span>{meta.groupsCount}개</span>
+                      </li>
+                    </ul>
+                  </div>
+                </CardDescription>
+              )}
+            </CardHeader>
+            <CardContent>
               <div className="prose dark:prose-invert max-w-none">
                 <ReactMarkdown>{markdownResult}</ReactMarkdown>
               </div>
-              <details className="mt-4">
-                <summary className="cursor-pointer text-sm text-gray-500 dark:text-gray-400">
+            </CardContent>
+            <CardFooter>
+              <details className="w-full">
+                <summary className="cursor-pointer text-sm text-muted-foreground">
                   마크다운 소스 보기
                 </summary>
-                <pre className="mt-2 p-2 bg-gray-100 dark:bg-gray-900 rounded text-sm whitespace-pre-wrap text-gray-800 dark:text-gray-200">
+                <pre className="mt-2 p-3 bg-muted rounded-md text-sm whitespace-pre-wrap w-full overflow-auto">
                   {markdownResult}
                 </pre>
               </details>
-            </div>
-          </div>
+            </CardFooter>
+          </Card>
         )}
       </main>
     </div>

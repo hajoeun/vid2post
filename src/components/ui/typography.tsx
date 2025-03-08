@@ -12,7 +12,7 @@ const H1 = forwardRef<HTMLHeadingElement, TypographyProps>(
     return (
       <Comp
         className={cn(
-          'scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl',
+          'scroll-m-20 text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl',
           className
         )}
         ref={ref}
@@ -29,7 +29,7 @@ const H2 = forwardRef<HTMLHeadingElement, TypographyProps>(
     return (
       <Comp
         className={cn(
-          'scroll-m-20 border-b border-gray-200 dark:border-gray-700 pb-2 text-3xl font-semibold tracking-tight first:mt-0 mt-10 mb-6',
+          'scroll-m-20 border-b border-gray-200 dark:border-gray-700 pb-2 text-3xl font-semibold tracking-tight text-foreground first:mt-0 mt-10 mb-6',
           className
         )}
         ref={ref}
@@ -46,7 +46,7 @@ const H3 = forwardRef<HTMLHeadingElement, TypographyProps>(
     return (
       <Comp
         className={cn(
-          'scroll-m-20 text-2xl font-semibold tracking-tight mt-8 mb-4',
+          'scroll-m-20 text-2xl font-semibold tracking-tight text-foreground mt-8 mb-4',
           className
         )}
         ref={ref}
@@ -63,7 +63,7 @@ const H4 = forwardRef<HTMLHeadingElement, TypographyProps>(
     return (
       <Comp
         className={cn(
-          'scroll-m-20 text-xl font-semibold tracking-tight mt-6 mb-3',
+          'scroll-m-20 text-xl font-semibold tracking-tight text-foreground mt-6 mb-3',
           className
         )}
         ref={ref}
@@ -80,7 +80,7 @@ const P = forwardRef<HTMLParagraphElement, TypographyProps>(
     return (
       <Comp
         className={cn(
-          'leading-7 text-gray-700 dark:text-gray-300 [&:not(:first-child)]:mt-6',
+          'leading-7 text-foreground [&:not(:first-child)]:mt-6',
           className
         )}
         ref={ref}
@@ -97,7 +97,7 @@ const Blockquote = forwardRef<HTMLQuoteElement, TypographyProps>(
     return (
       <Comp
         className={cn(
-          'mt-6 border-l-2 border-gray-300 dark:border-gray-600 pl-6 italic text-gray-800 dark:text-gray-200',
+          'mt-6 border-l-2 border-gray-300 dark:border-gray-600 pl-6 italic text-foreground',
           className
         )}
         ref={ref}
@@ -113,7 +113,10 @@ const List = forwardRef<HTMLUListElement, TypographyProps>(
     const Comp = asChild ? Slot : 'ul'
     return (
       <Comp
-        className={cn('my-6 ml-6 list-disc [&>li]:mt-2', className)}
+        className={cn(
+          'my-6 ml-6 list-disc [&>li]:mt-2 text-foreground',
+          className
+        )}
         ref={ref}
         {...props}
       />
@@ -128,7 +131,7 @@ const InlineCode = forwardRef<HTMLElement, TypographyProps>(
     return (
       <Comp
         className={cn(
-          'relative rounded bg-gray-100 dark:bg-gray-800 px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold text-gray-900 dark:text-gray-100',
+          'relative rounded bg-gray-100 dark:bg-gray-800 px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold text-foreground',
           className
         )}
         ref={ref}
@@ -144,7 +147,7 @@ const Lead = forwardRef<HTMLParagraphElement, TypographyProps>(
     const Comp = asChild ? Slot : 'p'
     return (
       <Comp
-        className={cn('text-xl text-gray-700 dark:text-gray-300', className)}
+        className={cn('text-xl text-foreground', className)}
         ref={ref}
         {...props}
       />
@@ -158,7 +161,7 @@ const Muted = forwardRef<HTMLParagraphElement, TypographyProps>(
     const Comp = asChild ? Slot : 'p'
     return (
       <Comp
-        className={cn('text-sm text-gray-500 dark:text-gray-400', className)}
+        className={cn('text-sm text-muted-foreground', className)}
         ref={ref}
         {...props}
       />
