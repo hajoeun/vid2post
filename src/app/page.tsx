@@ -3,9 +3,11 @@
 import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Header } from '@/components/header'
+import Link from 'next/link'
 
 interface ApiResponse {
   markdown: string
+  description?: string
   meta?: {
     usedMockData: boolean
     captionsCount: number
@@ -18,29 +20,27 @@ interface ApiResponse {
 export default function Home() {
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [markdownResult, setMarkdownResult] = useState('')
-  const [error, setError] = useState('')
+  const [markdownResult, setMarkdownResult] = useState<string>('')
+  const [error, setError] = useState<string | null>(null)
   const [meta, setMeta] = useState<ApiResponse['meta']>()
   const [videoId, setVideoId] = useState<string>('')
+  const [description, setDescription] = useState<string>('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    setError('')
+    setError(null)
     setMarkdownResult('')
-    setMeta(undefined)
     setVideoId('')
+    setDescription('')
+    setMeta(undefined)
+
+    if (!youtubeUrl) {
+      setError('YouTube URL을 입력해주세요.')
+      return
+    }
 
     try {
-      // 유튜브 URL 유효성 검사
-      if (
-        !youtubeUrl.includes('youtube.com') &&
-        !youtubeUrl.includes('youtu.be')
-      ) {
-        throw new Error('유효한 유튜브 URL을 입력해주세요.')
-      }
-
-      // API 호출
+      setIsLoading(true)
       const response = await fetch('/api/generate-post', {
         method: 'POST',
         headers: {
@@ -58,8 +58,9 @@ export default function Home() {
 
       const data: ApiResponse = await response.json()
       setMarkdownResult(data.markdown)
-      setMeta(data.meta)
       setVideoId(data.videoId || '')
+      setDescription(data.description || '')
+      setMeta(data.meta)
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message)
@@ -81,7 +82,11 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ markdown: markdownResult, videoId }),
+        body: JSON.stringify({
+          markdown: markdownResult,
+          videoId,
+          description,
+        }),
       })
 
       if (!response.ok) {
@@ -113,9 +118,9 @@ export default function Home() {
         </h1>
 
         <div className="mb-4 text-center">
-          <a href="/posts" className="text-blue-600 hover:underline">
+          <Link href="/posts" className="text-blue-600 hover:underline">
             게시글 목록 보기
-          </a>
+          </Link>
         </div>
 
         <form onSubmit={handleSubmit} className="mb-8">
