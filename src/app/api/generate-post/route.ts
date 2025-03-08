@@ -84,7 +84,7 @@ async function autoSegmentCaptions(captions: Caption[]): Promise<{ title: string
   // 자막이 너무 적으면 하나의 섹션으로 처리
   if (captions.length < 20) {
     console.log("[자동 섹션 분할] 자막이 너무 적어 하나의 섹션으로 처리합니다.");
-    return [{ title: "전체 내용", captions: captions.map(c => c.text) }];
+    return [{ title: "전체 내용 요약", captions: captions.map(c => c.text) }];
   }
   
   // 자막을 일정 크기의 청크로 나누기 (약 3-5분 단위)
@@ -126,7 +126,7 @@ async function generateSectionTitle(text: string, sectionNumber: number): Promis
     // Ollama API가 사용 불가능한 환경(예: Vercel)에서는 기본 제목 반환
     if (process.env.OLLAMA_API_AVAILABLE === 'false') {
       console.log(`[섹션 제목 생성] Ollama API 사용 불가능 - 기본 제목 반환`);
-      return `섹션 ${sectionNumber}`;
+      return `주요 내용 파트 ${sectionNumber}`;
     }
     
     const response = await fetch(process.env.OLLAMA_API_URL + "/generate", {
@@ -136,7 +136,9 @@ async function generateSectionTitle(text: string, sectionNumber: number): Promis
       },
       body: JSON.stringify({
         model: "exaone3.5",
-        prompt: `다음은 유튜브 영상 자막의 일부입니다. 이 내용을 가장 잘 표현하는 짧은 제목(5-7단어 이내)을 생성해주세요.
+        prompt: `당신은 유튜브 영상의 자막을 분석하여 적절한 섹션 제목을 생성하는 전문가입니다. 
+        
+        다음은 유튜브 영상 자막의 일부입니다. 이 내용을 가장 잘 표현하는 짧은 제목(5-7단어 이내)을 생성해주세요.
         
         중요한 규칙:
         1. 제목은 5-7단어 이내로 짧고 간결하게 작성하세요.
@@ -146,6 +148,8 @@ async function generateSectionTitle(text: string, sectionNumber: number): Promis
         5. 제목만 작성하고 다른 설명은 포함하지 마세요.
         6. 따옴표나 기타 특수문자를 포함하지 마세요.
         7. 제목 끝에 마침표를 넣지 마세요.
+        8. 숫자만으로 된 제목은 절대 사용하지 마세요.
+        9. 의미 있는 단어로 구성된 제목을 만드세요.
         
         자막 내용:
         ${text.length > 1000 ? text.substring(0, 1000) + "..." : text}
@@ -171,11 +175,21 @@ async function generateSectionTitle(text: string, sectionNumber: number): Promis
     // 마침표 제거
     title = title.replace(/\.$/, '');
     
+    // 숫자만 있는 제목인 경우 기본 제목으로 대체
+    if (/^\d+$/.test(title)) {
+      title = `주요 내용 파트 ${sectionNumber}`;
+    }
+    
+    // 빈 제목인 경우 기본 제목으로 대체
+    if (!title || title.trim() === '') {
+      title = `주요 내용 파트 ${sectionNumber}`;
+    }
+    
     console.log(`[섹션 제목 생성 완료] 결과: ${title}`);
     return title;
   } catch (error) {
     console.error("섹션 제목 생성 중 오류 발생:", error);
-    return `섹션 ${sectionNumber}`;
+    return `주요 내용 파트 ${sectionNumber}`;
   }
 }
 
@@ -428,9 +442,6 @@ async function generateMarkdown(videoTitle: string, groups: { title: string; cap
     
     // 섹션 제목 추가 (## 형식)
     markdown += `## ${group.title}\n\n`;
-    
-    // 동일한 제목으로 하위 섹션 추가 (### 형식)
-    markdown += `### ${group.title}\n\n`;
     
     const captionText = group.captions.join(' ');
     console.log(`[마크다운 생성] 그룹 ${i+1} 자막 길이: ${captionText.length}자`);
