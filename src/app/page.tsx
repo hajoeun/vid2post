@@ -31,6 +31,7 @@ interface ApiResponse {
 
 export default function Home() {
   const [youtubeUrl, setYoutubeUrl] = useState('')
+  const [aiProvider, setAiProvider] = useState('ollama')
   const [isLoading, setIsLoading] = useState(false)
   const [markdownResult, setMarkdownResult] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
@@ -40,6 +41,7 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true)
     setError(null)
     setMarkdownResult('')
     setVideoId('')
@@ -47,18 +49,18 @@ export default function Home() {
     setMeta(undefined)
 
     if (!youtubeUrl) {
-      setError('YouTube URL을 입력해주세요.')
+      setError('유튜브 URL을 입력해주세요')
+      setIsLoading(false)
       return
     }
 
     try {
-      setIsLoading(true)
       const response = await fetch('/api/generate-post', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ youtubeUrl }),
+        body: JSON.stringify({ youtubeUrl, aiProvider }),
       })
 
       if (!response.ok) {
@@ -159,6 +161,28 @@ export default function Home() {
                     {isLoading ? '처리 중...' : '생성하기'}
                   </Button>
                 </div>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="aiProvider" className="text-sm font-medium">
+                  AI 제공자 선택
+                </label>
+                <select
+                  id="aiProvider"
+                  value={aiProvider}
+                  onChange={(e) => setAiProvider(e.target.value)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="ollama">Ollama (기본값)</option>
+                  <option value="openai" disabled>
+                    OpenAI (준비 중)
+                  </option>
+                  <option value="gemini" disabled>
+                    Gemini (준비 중)
+                  </option>
+                  <option value="claude" disabled>
+                    Claude (준비 중)
+                  </option>
+                </select>
               </div>
             </form>
           </CardContent>
