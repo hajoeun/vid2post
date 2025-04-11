@@ -47,10 +47,13 @@ POST /api/generate-post
 
 ## 지원 예정 AI 제공자
 
-현재는 "ollama"만 지원되지만, 향후 다음 제공자가 추가될 예정입니다:
+현재는 다음 AI 제공자가 지원됩니다:
 
-- `openai`: OpenAI의 ChatGPT/GPT-4 사용
+- `ollama`: 로컬 Ollama API 사용 (기본값)
 - `gemini`: Google의 Gemini 모델 사용
+
+향후 지원 예정:
+- `openai`: OpenAI의 ChatGPT/GPT-4 사용
 - `claude`: Anthropic의 Claude 모델 사용
 
 ## 사용 예시
@@ -123,8 +126,19 @@ YOUTUBE_API_KEY=your_youtube_api_key
 OLLAMA_API_URL=http://localhost:11434/api
 OLLAMA_API_AVAILABLE=true
 
+# Gemini 설정 (Gemini 사용 시 필요)
+GEMINI_API_KEY=your_gemini_api_key
+
 # 다른 AI 제공자 설정 (사용 시 주석 해제)
 # OPENAI_API_KEY=your_openai_api_key
-# GEMINI_API_KEY=your_gemini_api_key
 # CLAUDE_API_KEY=your_claude_api_key
-``` 
+```
+
+### Gemini API 키 얻기
+
+Gemini API 키를 얻으려면:
+
+1. [Google AI Studio](https://makersuite.google.com/app/apikey)에 방문하세요
+2. Google 계정으로 로그인합니다
+3. "Get API key" 버튼을 클릭하여 새 API 키를 생성합니다
+4. 생성된 API 키를 환경 변수에 설정합니다 

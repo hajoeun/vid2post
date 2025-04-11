@@ -25,6 +25,7 @@ interface ApiResponse {
     captionsCount: number
     timestampsCount: number
     groupsCount: number
+    aiProvider?: string
   }
   videoId?: string
 }
@@ -176,9 +177,7 @@ export default function Home() {
                   <option value="openai" disabled>
                     OpenAI (준비 중)
                   </option>
-                  <option value="gemini" disabled>
-                    Gemini (준비 중)
-                  </option>
+                  <option value="gemini">Gemini</option>
                   <option value="claude" disabled>
                     Claude (준비 중)
                   </option>
@@ -243,6 +242,14 @@ export default function Home() {
                         <span className="text-muted-foreground">그룹:</span>
                         <span>{meta.groupsCount}개</span>
                       </li>
+                      {meta.aiProvider && (
+                        <li className="flex items-center gap-1">
+                          <span className="text-muted-foreground">
+                            AI 제공자:
+                          </span>
+                          <span>{meta.aiProvider}</span>
+                        </li>
+                      )}
                     </ul>
                   </div>
                 </CardDescription>

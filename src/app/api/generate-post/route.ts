@@ -370,9 +370,8 @@ class OpenAIService extends BaseAIService {
 */
 
 /**
- * Google Gemini 기반 AI 서비스 구현 (향후 구현 예시)
+ * Google Gemini 기반 AI 서비스 구현
  */
-/*
 class GeminiService extends BaseAIService {
   protected async callAIService(params: AIRequestParams): Promise<AIResponse> {
     // Gemini API 키 확인
@@ -381,7 +380,7 @@ class GeminiService extends BaseAIService {
       throw new Error("Gemini API 키가 설정되지 않았습니다.");
     }
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-exp-03-25:generateContent?key=${apiKey}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -401,18 +400,34 @@ class GeminiService extends BaseAIService {
     });
 
     if (!response.ok) {
+      const errorData = await response.json();
+      console.error("[Gemini API 오류]", errorData);
       throw new Error("Gemini API 요청 실패");
     }
 
     const data = await response.json();
-    return { content: data.candidates[0].content.parts[0].text };
+    
+    // 응답 구조 확인
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) {
+      console.error("[Gemini API 응답 형식 오류]", data);
+      throw new Error("Gemini API 응답 형식이 예상과 다릅니다.");
+    }
+    
+    // 텍스트 추출
+    let content = '';
+    for (const part of data.candidates[0].content.parts) {
+      if (part.text) {
+        content += part.text;
+      }
+    }
+    
+    return { content };
   }
   
   protected isAIServiceUnavailable(): boolean {
     return !process.env.GEMINI_API_KEY;
   }
 }
-*/
 
 /**
  * Anthropic Claude 기반 AI 서비스 구현 (향후 구현 예시)
@@ -475,8 +490,10 @@ class AISummaryServiceFactory {
       /*
       case 'openai':
         return new OpenAIService();
+      */
       case 'gemini':
         return new GeminiService();
+      /*
       case 'claude':
         return new ClaudeService();
       */
