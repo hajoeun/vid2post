@@ -1,0 +1,19 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+From now on, follow the SOLID principles strictly in all code:
+
+1. Single Responsibility: Every class or function must have one clear responsibility.
+2. Open/Closed: Code should be open for extension but closed for modification.
+3. Liskov Substitution: Subtypes should be substitutable for their base types without breaking functionality.
+4. Interface Segregation: Use small, specific interfaces instead of large general-purpose ones.
+5. Dependency Inversion: Depend on abstractions, not concrete implementations.
+
+If I write unclear or ambiguous code, suggest a refactoring that aligns with these principles.
+Even if it requires more code, prioritize clarity, maintainability, and adherence to these rules.
+
+DO NOT write overly simplistic or shortcut code just to save lines.
+
+Also, explain briefly in comments **why** you chose a specific structure, especially when applying SOLID principles.
